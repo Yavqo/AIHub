@@ -5,7 +5,7 @@ import Icon, { type IconName } from "@/components/Icon/Icon";
 import StatusChip from "@/components/StatusChip/StatusChip";
 import { listModels } from "@/lib/catalog";
 import { DEFAULT_MODEL_ID, formatEur } from "@/lib/models";
-import { apiBaseUrl } from "@/lib/site";
+import { apiBaseUrl, appUrl, siteDescription, siteName } from "@/lib/site";
 import { chatSnippets } from "@/lib/snippets";
 import styles from "./page.module.css";
 
@@ -23,8 +23,37 @@ const GLYPH = `{\n  "model": "sunlight",\n  "stream": true\n}`;
 export default async function Home() {
   const models = await listModels();
 
+  // Structured data so search engines understand AIHub as Yavqo's AI API product.
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "Organization", "@id": "https://yavqo.com/#organization", name: "Yavqo", url: "https://yavqo.com", logo: `${appUrl}/brand/yavqo-mark-512.png` },
+      { "@type": "WebSite", "@id": `${appUrl}/#website`, url: appUrl, name: siteName, publisher: { "@id": "https://yavqo.com/#organization" } },
+      {
+        "@type": "WebAPI",
+        name: `${siteName} API`,
+        description: siteDescription,
+        url: appUrl,
+        documentation: `${appUrl}/docs`,
+        provider: { "@id": "https://yavqo.com/#organization" },
+        offers: models
+          .filter((m) => m.is_active)
+          .map((m) => ({
+            "@type": "Offer",
+            name: m.display_name,
+            priceCurrency: m.currency,
+            priceSpecification: [
+              { "@type": "UnitPriceSpecification", price: Number(m.input_price_per_mtok), priceCurrency: m.currency, unitText: "1M input tokens" },
+              { "@type": "UnitPriceSpecification", price: Number(m.output_price_per_mtok), priceCurrency: m.currency, unitText: "1M output tokens" },
+            ],
+          })),
+      },
+    ],
+  };
+
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }} />
       <section className={styles.hero}>
         <div className={`y-container ${styles.heroInner}`}>
           <p className={`${styles.eyebrow} y-reveal`}>Yavqo AIHub</p>

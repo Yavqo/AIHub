@@ -12,6 +12,11 @@ const nextConfig: NextConfig = {
           { key: "X-Frame-Options", value: "DENY" },
         ],
       },
+      {
+        // API responses and auth redirects are never search results.
+        source: "/:prefix(api|auth)/:path*",
+        headers: [{ key: "X-Robots-Tag", value: "noindex, nofollow" }],
+      },
     ];
   },
 };

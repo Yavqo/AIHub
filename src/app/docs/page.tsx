@@ -3,14 +3,18 @@ import Link from "next/link";
 import CodeBlock from "@/components/CodeBlock/CodeBlock";
 import { listModels } from "@/lib/catalog";
 import { DEFAULT_MODEL_ID, formatEur } from "@/lib/models";
-import { apiBaseUrl } from "@/lib/site";
 import { chatSnippets } from "@/lib/snippets";
 import styles from "./docs.module.css";
+import { apiBaseUrl, publicPage } from "@/lib/site";
 
 // Re-read the model catalog every 5 minutes so changes need no redeploy.
 export const revalidate = 300;
 
-export const metadata: Metadata = { title: "Docs" };
+export const metadata: Metadata = publicPage(
+  "/docs",
+  "API docs",
+  "Call Sunlight models with any OpenAI SDK: quickstart, deployments, streaming, pricing, rate limits and error codes for the Yavqo AIHub API.",
+);
 
 const SECTIONS = [
   ["quickstart", "Quickstart"],

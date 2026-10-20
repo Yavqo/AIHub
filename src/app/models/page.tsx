@@ -5,11 +5,16 @@ import StatusChip from "@/components/StatusChip/StatusChip";
 import { listModels } from "@/lib/catalog";
 import { formatEur } from "@/lib/models";
 import styles from "./models.module.css";
+import { publicPage } from "@/lib/site";
 
 // Re-read the model catalog every 5 minutes so changes need no redeploy.
 export const revalidate = 300;
 
-export const metadata: Metadata = { title: "Models" };
+export const metadata: Metadata = publicPage(
+  "/models",
+  "Sunlight models and pricing",
+  "Compare Sunlight AI models, see per-token prices in EUR and deploy one in your project with its own OpenAI-compatible endpoint.",
+);
 
 export default async function ModelsPage() {
   const models = await listModels();

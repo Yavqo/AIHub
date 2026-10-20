@@ -1,6 +1,11 @@
+import type { Metadata } from "next";
 import DashboardTabs from "./DashboardTabs";
 import { requireUser } from "@/lib/dashboard";
+import { noIndex } from "@/lib/site";
 import styles from "./dashboard.module.css";
+
+// Everything under /dashboard is private to the signed-in user.
+export const metadata: Metadata = { robots: noIndex };
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { user } = await requireUser("/dashboard");

@@ -3,8 +3,9 @@ import Playground, { type PlaygroundTarget } from "./Playground";
 import { listModels } from "@/lib/catalog";
 import { loadDeployments, loadProjects, requireUser } from "@/lib/dashboard";
 import { DEFAULT_MODEL_ID } from "@/lib/models";
+import { noIndex } from "@/lib/site";
 
-export const metadata: Metadata = { title: "Playground" };
+export const metadata: Metadata = { title: "Playground", robots: noIndex };
 
 export default async function PlaygroundPage({ searchParams }: PageProps<"/playground">) {
   await requireUser("/playground");

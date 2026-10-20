@@ -4,6 +4,7 @@ import Header from "@/components/Header/Header";
 import Footer from "@/components/Footer/Footer";
 import PromotionClaim from "@/components/PromotionClaim/PromotionClaim";
 import { Suspense } from "react";
+import { appUrl, siteDescription, siteName } from "@/lib/site";
 import { getUser } from "@/lib/supabase/server";
 import "./globals.css";
 
@@ -17,9 +18,22 @@ const sans = Plus_Jakarta_Sans({
 const code = Geist_Mono({ subsets: ["latin"], variable: "--font-code", display: "swap" });
 
 export const metadata: Metadata = {
-  title: { default: "Yavqo AIHub", template: "%s · Yavqo AIHub" },
-  description: "Build with Sunlight models through one OpenAI-compatible API. Create keys, try prompts and track usage.",
-  icons: { icon: "/brand/yavqo-mark-512.png" },
+  metadataBase: new URL(appUrl),
+  title: { default: `${siteName}: deploy Sunlight AI models`, template: `%s · ${siteName}` },
+  description: siteDescription,
+  applicationName: siteName,
+  icons: { icon: "/brand/yavqo-mark-512.png", apple: "/brand/yavqo-mark-512.png" },
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName,
+    locale: "en",
+    url: "/",
+    title: `${siteName}: deploy Sunlight AI models`,
+    description: siteDescription,
+  },
+  twitter: { card: "summary_large_image", title: `${siteName}: deploy Sunlight AI models`, description: siteDescription },
+  robots: { index: true, follow: true, googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1 } },
 };
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
