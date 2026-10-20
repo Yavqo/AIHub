@@ -1,0 +1,46 @@
+.terminal {
+  border-radius: var(--y-radius);
+  background: var(--y-midnight);
+  color: #fff;
+  overflow: hidden;
+}
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--y-on-media-line);
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--y-on-media-muted);
+}
+.dots { display: flex; gap: 6px; margin-right: 6px; }
+.dots span { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.18); }
+.body {
+  font-family: var(--y-font-code);
+  font-size: 13px;
+  line-height: 22px;
+  letter-spacing: 0;
+  padding: 16px;
+  min-height: 260px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+.line { display: flex; gap: 10px; white-space: pre-wrap; word-break: break-word; animation: appear var(--y-base) var(--y-ease-soft) both; }
+.prompt { color: var(--y-on-media-muted); }
+.mark { flex: none; width: 14px; text-align: center; }
+.ok { color: var(--y-positive); }
+.err { color: var(--y-negative); }
+.warn { color: var(--y-warning); }
+.run { color: var(--y-on-media-muted); }
+.detail { color: var(--y-on-media-muted); }
+.final { margin-top: 8px; font-weight: 700; }
+.spinner { display: inline-block; animation: spin 0.8s steps(8) infinite; }
+.caret { display: inline-block; width: 8px; height: 16px; background: #fff; vertical-align: text-bottom; animation: blink 1s steps(2) infinite; }
+@keyframes appear { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes blink { 50% { opacity: 0; } }
+.title { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.elapsed { flex: none; font-variant-numeric: tabular-nums; }
+.progress { height: 2px; background: var(--y-on-media-line); }
+.progress span { display: block; height: 100%; background: var(--y-blue); transition: width var(--y-reveal) var(--y-ease-soft); }

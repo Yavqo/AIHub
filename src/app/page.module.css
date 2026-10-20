@@ -1,0 +1,101 @@
+.hero {
+  position: relative;
+  min-height: 100svh;
+  background: var(--y-midnight);
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: calc(var(--y-header-h) + 48px) 0 72px;
+  overflow: hidden;
+}
+.heroInner { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 22px; }
+.eyebrow { font-size: 16px; line-height: 24px; color: var(--y-on-media-muted); }
+.heroLead { color: var(--y-on-media-muted); max-width: 600px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.console {
+  width: 100%;
+  max-width: 960px;
+  margin-top: 40px;
+  border-radius: var(--y-radius-lg);
+  border: 1px solid var(--y-on-media-line);
+  background: rgba(255, 255, 255, 0.04);
+  text-align: left;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  overflow: hidden;
+}
+.pane { padding: 24px; min-width: 0; }
+.pane + .pane { border-left: 1px solid var(--y-on-media-line); }
+.paneLabel { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; line-height: 16px; color: var(--y-on-media-muted); margin-bottom: 16px; }
+.paneCode { font-family: var(--y-font-code); font-size: 13px; line-height: 22px; color: #fff; white-space: pre-wrap; word-break: break-word; margin: 0; }
+.answer { font-size: 16px; line-height: 26px; color: #fff; }
+.answer span { color: var(--y-on-media-muted); }
+
+.benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--y-gap); }
+.benefit { min-height: 260px; display: flex; flex-direction: column; gap: 16px; }
+.benefitIcon {
+  width: 48px; height: 48px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--y-soft); color: var(--y-ink);
+}
+.benefitBody { color: var(--y-muted); max-width: 400px; }
+
+.steps { display: grid; grid-template-columns: 360px 1fr; gap: var(--y-gap); align-items: start; }
+.stepList { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.step { padding: 24px 0; border-bottom: 1px solid var(--y-hairline); display: flex; gap: 16px; }
+.step:first-child { padding-top: 0; }
+.stepNum {
+  flex: none; width: 32px; height: 32px; border-radius: 50%;
+  border: 1px solid var(--y-hairline);
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 14px; font-weight: 700;
+}
+.stepTitle { font-size: 18px; line-height: 26px; font-weight: 700; letter-spacing: normal; }
+.stepBody { color: var(--y-muted); margin-top: 4px; }
+
+.models { display: grid; grid-template-columns: repeat(2, 1fr); gap: var(--y-gap); }
+.modelsSingle { grid-template-columns: 1fr; }
+.modelsSingle .modelCard { aspect-ratio: auto; height: 600px; }
+.modelCard {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  max-height: 672px;
+  border-radius: var(--y-radius);
+  background: var(--y-midnight);
+  color: #fff;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  text-align: center;
+  padding: 48px 32px;
+  gap: 16px;
+}
+.modelCard .chipRow { position: absolute; top: 24px; left: 24px; }
+.modelGlyph {
+  position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+  font-family: var(--y-font-code); font-size: 15px; line-height: 26px; color: rgba(255, 255, 255, 0.28);
+  white-space: pre; pointer-events: none; padding-bottom: 160px;
+}
+.modelEyebrow { font-size: 16px; color: var(--y-on-media-muted); position: relative; }
+.modelTitle { font-size: 48px; line-height: 56px; font-weight: 500; position: relative; }
+.modelCard .actions { position: relative; }
+
+.cta { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 24px; }
+
+@media (max-width: 1024px) {
+  .steps { grid-template-columns: 1fr; }
+  .benefits { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 767px) {
+  .console { grid-template-columns: 1fr; }
+  .pane + .pane { border-left: 0; border-top: 1px solid var(--y-on-media-line); }
+  .benefits, .models { grid-template-columns: 1fr; }
+  .benefit { min-height: 0; }
+  .modelCard, .modelsSingle .modelCard { aspect-ratio: 3 / 4; height: auto; }
+  .modelTitle { font-size: 32px; line-height: 36px; }
+  .actions { width: 100%; flex-direction: column; }
+}

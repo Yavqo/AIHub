@@ -1,0 +1,9 @@
+.card {
+  background: var(--y-canvas);
+  border: 1px solid var(--y-hairline);
+  border-radius: var(--y-radius);
+  padding: 32px;
+}
+.soft { background: var(--y-soft); border-color: transparent; }
+.compact { padding: 24px; }
+@media (max-width: 767px) { .card { padding: 24px; } }

@@ -1,0 +1,34 @@
+.field { position: relative; display: block; }
+.input {
+  width: 100%;
+  height: 60px;
+  padding: 26px 16px 8px;
+  border-radius: var(--y-radius-sm);
+  border: 1px solid var(--y-input-border);
+  background: var(--y-canvas);
+  font-size: 16px;
+  line-height: 24px;
+  outline: 1px solid transparent;
+  transition: border-color var(--y-fast) ease, outline-color var(--y-fast) ease;
+}
+textarea.input { height: auto; min-height: 120px; resize: vertical; padding-top: 28px; }
+select.input { appearance: none; cursor: pointer; }
+.input:focus { border-color: var(--y-blue-focus); outline-color: var(--y-blue-focus); }
+.label {
+  position: absolute;
+  left: 17px;
+  top: 18px;
+  font-size: 16px;
+  line-height: 24px;
+  color: var(--y-muted-2);
+  pointer-events: none;
+  transition: transform var(--y-base) var(--y-ease-soft), font-size var(--y-base) var(--y-ease-soft);
+  transform-origin: left top;
+}
+.input:focus + .label,
+.input:not(:placeholder-shown) + .label,
+.always + .label { transform: translateY(-10px); font-size: 12px; }
+.chevron { position: absolute; right: 16px; top: 18px; color: var(--y-muted); pointer-events: none; transform: rotate(90deg); }
+.error .input { border-color: var(--y-negative); }
+.message { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--y-negative); }
+.hint { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--y-muted); }

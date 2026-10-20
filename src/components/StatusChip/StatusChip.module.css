@@ -1,0 +1,18 @@
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 12px;
+  border-radius: var(--y-radius-pill);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  background: var(--y-soft);
+  color: var(--y-ink);
+}
+.dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.positive .dot { background: var(--y-positive); }
+.negative .dot { background: var(--y-negative); }
+.neutral .dot { background: var(--y-muted-2); }
+.onMedia { background: rgba(255, 255, 255, 0.16); color: #fff; backdrop-filter: blur(20px); }
