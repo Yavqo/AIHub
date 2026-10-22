@@ -7,7 +7,7 @@ export const FALLBACK_MODELS: Model[] = [
     display_name: "Sunlight 2 Pro",
     description: "Fast, capable model for code, research and everyday chat.",
     context_window: null,
-    upstream_model: "sunlight-2-pro",
+    upstream_model: "recursive/flint-v1.0:free",
     is_active: true,
     sort_order: 1,
     input_price_per_mtok: 2.5,
