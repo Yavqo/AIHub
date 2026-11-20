@@ -108,7 +108,7 @@ export default async function BillingPage({ searchParams }: PageProps<"/dashboar
             <tbody>
               {models.filter((m) => m.is_active).map((m) => (
                 <tr key={m.id}>
-                  <td className={styles.strong}>{m.display_name}</td>
+                  <td className={styles.strong}>{m.display_name}{m.is_legacy ? " (Legacy)" : ""}</td>
                   <td>{formatEur(Number(m.input_price_per_mtok))}</td>
                   <td>{formatEur(Number(m.output_price_per_mtok))}</td>
                 </tr>

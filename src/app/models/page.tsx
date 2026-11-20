@@ -3,7 +3,7 @@ import { ButtonLink } from "@/components/Button/Button";
 import Card from "@/components/Card/Card";
 import StatusChip from "@/components/StatusChip/StatusChip";
 import { listModels } from "@/lib/catalog";
-import { formatEur } from "@/lib/models";
+import { formatEur, isDeployableModel, modelStatusLabel, modelStatusTone } from "@/lib/models";
 import styles from "./models.module.css";
 import { publicPage } from "@/lib/site";
 
@@ -29,7 +29,7 @@ export default async function ModelsPage() {
           <Card key={m.id} className={styles.card}>
             <div className={styles.top}>
               <span className={styles.id}>{m.id}</span>
-              <StatusChip tone={m.is_active ? "positive" : "neutral"}>{m.is_active ? "Live" : "Coming soon"}</StatusChip>
+              <StatusChip tone={modelStatusTone(m)}>{modelStatusLabel(m)}</StatusChip>
             </div>
             <h2 className="y-sub">{m.display_name}</h2>
             <p className="y-muted">{m.description}</p>
@@ -40,7 +40,7 @@ export default async function ModelsPage() {
               <div className={styles.spec}><dt>Context</dt><dd>{m.context_window ? `${(m.context_window / 1000).toFixed(0)}K tokens` : "Not published"}</dd></div>
             </dl>
             <div className={styles.actions}>
-              {m.is_active ? (
+              {isDeployableModel(m) ? (
                 <>
                   <ButtonLink href="/dashboard/projects">Deploy</ButtonLink>
                   <ButtonLink href={`/playground?model=${m.id}`} variant="outline">Try in playground</ButtonLink>

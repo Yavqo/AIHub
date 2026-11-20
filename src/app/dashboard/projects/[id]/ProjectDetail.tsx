@@ -11,7 +11,7 @@ import { TextArea, TextField } from "@/components/FormField/FormField";
 import Icon from "@/components/Icon/Icon";
 import Modal from "@/components/Modal/Modal";
 import StatusChip from "@/components/StatusChip/StatusChip";
-import { formatEur } from "@/lib/models";
+import { formatEur, isDeployableModel } from "@/lib/models";
 import { apiBaseUrl } from "@/lib/site";
 import { chatSnippets } from "@/lib/snippets";
 import type { Deployment, Model, Project } from "@/lib/types";
@@ -113,9 +113,10 @@ export default function ProjectDetail({
   spendByDeployment: Record<string, number>;
 }) {
   const router = useRouter();
+  const deployableModels = models.filter(isDeployableModel);
   const [deployments, setDeployments] = useState(initialDeployments);
   const [deployOpen, setDeployOpen] = useState(false);
-  const [modelId, setModelId] = useState(models[0]?.id ?? "");
+  const [modelId, setModelId] = useState(deployableModels[0]?.id ?? "");
   const [form, setForm] = useState<FormState>(emptyForm);
   const [created, setCreated] = useState<Deployment | null>(null);
   const [editing, setEditing] = useState<Deployment | null>(null);
@@ -128,7 +129,11 @@ export default function ProjectDetail({
   const runId = useRef(0);
   const deployed = useRef<Deployment | null>(null);
 
-  const modelName = (id: string) => models.find((m) => m.id === id)?.display_name ?? id;
+  const modelName = (id: string) => {
+    const m = models.find((x) => x.id === id);
+    if (!m) return id;
+    return m.is_legacy ? `${m.display_name} (Legacy)` : m.display_name;
+  };
 
   function closeDeploy() {
     runId.current++;
@@ -153,7 +158,7 @@ export default function ProjectDetail({
     e.preventDefault();
     const problem = formError(form);
     if (problem) return setError(problem);
-    const model = models.find((m) => m.id === modelId);
+    const model = deployableModels.find((m) => m.id === modelId);
     if (!model) return setError("Choose a model.");
     setError("");
     deployed.current = null;
@@ -302,7 +307,7 @@ export default function ProjectDetail({
     }
   }
 
-  const selectedModel = models.find((m) => m.id === modelId);
+  const selectedModel = deployableModels.find((m) => m.id === modelId);
 
   return (
     <>
@@ -311,7 +316,7 @@ export default function ProjectDetail({
           <Link href="/dashboard/projects" className={styles.back}><Icon name="arrow" size={18} />Projects</Link>
           <h2 className="y-title">{project.name}</h2>
         </div>
-        <Button onClick={() => setDeployOpen(true)} disabled={!models.length}>
+        <Button onClick={() => setDeployOpen(true)} disabled={!deployableModels.length}>
           <Icon name="plus" size={18} />
           Deploy a model
         </Button>
@@ -336,7 +341,7 @@ export default function ProjectDetail({
           <div className={dash.empty}>
             <h3 className="y-sub">Deploy your first model</h3>
             <p className="y-muted">Pick a Sunlight model, give it a name and a system prompt, and get an endpoint for your app.</p>
-            <Button onClick={() => setDeployOpen(true)} disabled={!models.length}>Deploy a model</Button>
+            <Button onClick={() => setDeployOpen(true)} disabled={!deployableModels.length}>Deploy a model</Button>
           </div>
         ) : (
           <div className={styles.list}>
@@ -429,7 +434,7 @@ export default function ProjectDetail({
         ) : (
           <form className={styles.form} onSubmit={onDeploy}>
             <div className={styles.modelOptions} role="radiogroup" aria-label="Base model">
-              {models.map((m) => (
+              {deployableModels.map((m) => (
                 <button key={m.id} type="button" role="radio" aria-checked={m.id === modelId} className={styles.modelOption} onClick={() => setModelId(m.id)}>
                   <span className={styles.modelOptionName}>{m.display_name}</span>
                   <span className="y-muted y-ui">{m.description}</span>

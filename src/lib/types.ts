@@ -24,7 +24,9 @@ export type Model = {
   description: string;
   context_window: number | null;
   upstream_model: string;
+  upstream_base_url?: string | null;
   is_active: boolean;
+  is_legacy?: boolean;
   sort_order: number;
   input_price_per_mtok: number;
   output_price_per_mtok: number;

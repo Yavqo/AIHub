@@ -2,63 +2,87 @@
   position: sticky;
   top: 0;
   z-index: 50;
-  height: var(--y-header-h);
+  min-block-size: var(--y-header-h);
   background: var(--y-header-blur-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
   color: var(--y-ink);
-  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+  border-bottom: 1px solid var(--y-hairline);
+  transition: box-shadow var(--y-base) var(--y-ease-soft), background-color var(--y-base) var(--y-ease-soft);
 }
-.overHero {
-  background: transparent;
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
-  color: #fff;
+.scrolled {
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: var(--y-shadow-sm);
 }
 .inner {
-  height: 100%;
+  min-block-size: var(--y-header-h);
+  max-width: calc(1280px + 2 * var(--y-gutter));
+  margin-inline: auto;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   padding-inline: var(--y-gutter);
 }
-.left, .right { display: flex; align-items: center; gap: 4px; }
-.logo { display: flex; align-items: center; gap: 10px; margin-right: 20px; color: inherit; }
+.left, .right { display: flex; align-items: center; gap: 6px; }
+.logo { display: flex; align-items: center; gap: 10px; margin-right: 24px; color: var(--y-ink-strong); }
 .logo:hover { text-decoration: none; }
 .logoImg { height: 22px; width: auto; }
-.logoLabel { font-size: 16px; font-weight: 500; padding-left: 10px; border-left: 1px solid var(--y-hairline); line-height: 20px; letter-spacing: -0.16px; }
+.logoLabel {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding-left: 10px;
+  border-left: 1px solid var(--y-border);
+  line-height: 1.25;
+  color: var(--y-muted);
+  letter-spacing: -0.01em;
+}
 
 .link {
   display: inline-flex;
   align-items: center;
-  height: 32px;
-  padding: 4px 12px;
-  border-radius: 24px;
-  font-size: 14px;
-  line-height: 20px;
-  letter-spacing: -0.14px;
-  color: inherit;
-  transition: background-color var(--y-fast) ease;
+  min-block-size: 36px;
+  padding: 6px 14px;
+  border-radius: var(--y-radius-pill);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  font-weight: 500;
+  color: var(--y-muted);
+  transition: background-color var(--y-fast) var(--y-ease-soft), color var(--y-fast) var(--y-ease-soft);
 }
-.link:hover { background: rgba(0, 0, 0, 0.05); text-decoration: none; }
-.overHero .link:hover { background: rgba(255, 255, 255, 0.12); }
-.active { font-weight: 700; }
+.link:hover {
+  background: var(--y-surface-2);
+  color: var(--y-ink-strong);
+  text-decoration: none;
+}
+.active {
+  background: var(--y-blue-soft);
+  color: var(--y-blue-focus);
+  font-weight: 600;
+}
+.active:hover {
+  background: var(--y-blue-soft-hover);
+  color: var(--y-blue-focus);
+}
 
 .iconBtn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  height: 44px;
+  width: 40px;
+  height: 40px;
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: inherit;
+  color: var(--y-muted);
   cursor: pointer;
+  transition: background-color var(--y-fast) var(--y-ease-soft), color var(--y-fast) var(--y-ease-soft);
 }
-.iconBtn:hover { background: rgba(0, 0, 0, 0.05); text-decoration: none; }
-.overHero .iconBtn:hover { background: rgba(255, 255, 255, 0.12); }
+.iconBtn:hover {
+  background: var(--y-surface-2);
+  color: var(--y-ink-strong);
+  text-decoration: none;
+}
 
 .menuBtn { display: none; }
 
@@ -72,14 +96,14 @@
   flex-direction: column;
   padding: 0 var(--y-gutter) 32px;
 }
-.mobileTop { height: var(--y-header-h); display: flex; align-items: center; justify-content: space-between; }
-.mobileLinks { display: flex; flex-direction: column; margin-top: 16px; }
+.mobileTop { min-block-size: var(--y-header-h); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--y-hairline); }
+.mobileLinks { display: flex; flex-direction: column; margin-top: 12px; }
 .mobileLink {
-  font-size: 24px;
-  line-height: 30px;
+  font-size: 1.25rem;
+  line-height: 1.4;
   font-weight: 500;
-  color: var(--y-ink);
-  padding: 18px 0;
+  color: var(--y-ink-strong);
+  padding: 16px 0;
   border-bottom: 1px solid var(--y-hairline);
 }
 .mobileCta { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
@@ -89,4 +113,3 @@
   .menuBtn { display: inline-flex; }
   .logo { margin-right: 0; }
 }
-.overHero .logoLabel { border-left-color: var(--y-on-media-line); }

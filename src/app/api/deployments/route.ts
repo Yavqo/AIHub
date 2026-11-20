@@ -2,6 +2,7 @@ import { z } from "zod";
 import { listModels } from "@/lib/catalog";
 import { deploymentFields, makeSlug } from "@/lib/deployments";
 import { isSupabaseConfigured } from "@/lib/env";
+import { isDeployableModel } from "@/lib/models";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -21,8 +22,9 @@ export async function POST(req: Request) {
   const parsed = createSchema.safeParse(await req.json().catch(() => null));
   if (!parsed.success) return Response.json({ error: "Check the deployment name and settings." }, { status: 400 });
 
-  const model = (await listModels()).find((m) => m.id === parsed.data.base_model_id && m.is_active);
-  if (!model) return Response.json({ error: "That model can't be deployed right now." }, { status: 400 });
+  const model = (await listModels()).find((m) => m.id === parsed.data.base_model_id);
+  if (!model || !model.is_active) return Response.json({ error: "That model can't be deployed right now." }, { status: 400 });
+  if (!isDeployableModel(model)) return Response.json({ error: "That model is legacy and can't be used for new deployments." }, { status: 400 });
 
   // RLS checks that the project belongs to the caller.
   const { data, error } = await supabase

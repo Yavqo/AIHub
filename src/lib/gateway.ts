@@ -6,7 +6,40 @@ import { apiError } from "@/lib/errors";
 import type { Target } from "@/lib/deployments";
 import { costEur } from "@/lib/models";
 import { addDeploymentTokens, takeDeploymentSlot } from "@/lib/ratelimit";
+import type { Model } from "@/lib/types";
 import { recordUsage, type UsageEntry } from "@/lib/usage";
+
+export type UpstreamTarget = {
+  baseUrl: string;
+  apiKey: string;
+  requiresKey: boolean;
+  isCustom: boolean;
+};
+
+// Resolves which upstream API base URL and optional Bearer token to use for a model.
+// Models without upstream_base_url route through the default Yavqo Sunlight gateway.
+export function resolveUpstream(model: Pick<Model, "upstream_base_url">): UpstreamTarget {
+  const customUrl = model.upstream_base_url?.trim();
+  if (!customUrl) {
+    return {
+      baseUrl: serverEnv.gatewayBaseUrl,
+      apiKey: serverEnv.gatewayApiKey,
+      requiresKey: true,
+      isCustom: false,
+    };
+  }
+  const baseUrl = customUrl.replace(/\/$/, "");
+  let apiKey = "";
+  try {
+    const host = new URL(baseUrl).hostname.toLowerCase();
+    if (host === "api.orcarouter.ai" || host.endsWith(".orcarouter.ai")) {
+      apiKey = serverEnv.orcarouterApiKey;
+    } else if (host === "freemodel.in" || host.endsWith(".freemodel.in")) {
+      apiKey = serverEnv.freemodelApiKey;
+    }
+  } catch {}
+  return { baseUrl, apiKey, requiresKey: false, isCustom: true };
+}
 
 const messageSchema = z
   .object({
@@ -63,7 +96,8 @@ export async function forwardChat(input: ChatBody, target: Target, caller: Calle
   const { model, deployment } = target;
   const servedAs = deployment?.slug ?? model.id;
   const body = applyDeployment(input, target);
-  if (!serverEnv.gatewayApiKey) {
+  const upstreamTarget = resolveUpstream(model);
+  if (upstreamTarget.requiresKey && !upstreamTarget.apiKey) {
     return apiError(503, "The Sunlight gateway is not configured.", "server_error", "gateway_not_configured");
   }
 
@@ -117,11 +151,11 @@ export async function forwardChat(input: ChatBody, target: Target, caller: Calle
 
   let upstream: Response;
   try {
-    upstream = await fetch(`${serverEnv.gatewayBaseUrl}/chat/completions`, {
+    upstream = await fetch(`${upstreamTarget.baseUrl}/chat/completions`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${serverEnv.gatewayApiKey}`,
+        ...(upstreamTarget.apiKey ? { Authorization: `Bearer ${upstreamTarget.apiKey}` } : {}),
         ...(stream ? { Accept: "text/event-stream" } : {}),
       },
       body: JSON.stringify({ ...body, model: model.upstream_model }),
@@ -135,6 +169,10 @@ export async function forwardChat(input: ChatBody, target: Target, caller: Calle
     after(() => log(upstream.status));
     // The gateway rejected AIHub's own key: a server misconfiguration, not the caller's fault.
     if (upstream.status === 401 || upstream.status === 403) {
+      if (upstreamTarget.isCustom) {
+        console.error(`Upstream provider ${upstreamTarget.baseUrl} rejected authentication`, upstream.status);
+        return apiError(502, "AIHub could not authenticate with the upstream model provider.", "server_error", "gateway_auth_failed", rl);
+      }
       console.error("Sunlight gateway rejected GATEWAY_API_KEY", upstream.status);
       return apiError(502, "AIHub could not authenticate with the Sunlight gateway. The server's GATEWAY_API_KEY is wrong or out of date.", "server_error", "gateway_auth_failed", rl);
     }

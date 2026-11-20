@@ -27,7 +27,7 @@ export default async function ProjectPage({ params }: PageProps<"/dashboard/proj
       project={project}
       initialDeployments={deployments}
       keyCount={keys.filter((k) => k.project_id === id && !k.revoked_at).length}
-      models={models.filter((m) => m.is_active)}
+      models={models}
       monthLabel={month.label}
       monthTotals={sumBilling(projectRows)}
       spendByDeployment={spendByDeployment}

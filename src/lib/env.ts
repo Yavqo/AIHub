@@ -10,6 +10,8 @@ export const serverEnv = {
   supabaseServiceRoleKey: read("SUPABASE_SERVICE_ROLE_KEY"),
   gatewayBaseUrl: (read("GATEWAY_BASE_URL") || "https://api.ai.yavqo.com/v1").replace(/\/$/, ""),
   gatewayApiKey: read("GATEWAY_API_KEY"),
+  orcarouterApiKey: read("ORCAROUTER_API_KEY"),
+  freemodelApiKey: read("FREEMODEL_API_KEY"),
   rateLimitPerMin: Number.parseInt(read("RATE_LIMIT_PER_MIN") || "60", 10),
 };
 

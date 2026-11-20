@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import CodeBlock from "@/components/CodeBlock/CodeBlock";
 import { listModels } from "@/lib/catalog";
-import { DEFAULT_MODEL_ID, formatEur } from "@/lib/models";
+import { DEFAULT_MODEL_ID, formatEur, modelStatusLabel } from "@/lib/models";
 import { chatSnippets } from "@/lib/snippets";
 import styles from "./docs.module.css";
 import { apiBaseUrl, publicPage } from "@/lib/site";
@@ -84,7 +84,11 @@ export default async function DocsPage() {
               <thead><tr><th>Model</th><th>Input, per 1M tokens</th><th>Output, per 1M tokens</th></tr></thead>
               <tbody>
                 {models.filter((m) => m.is_active).map((m) => (
-                  <tr key={m.id}><td>{m.id}</td><td>{formatEur(Number(m.input_price_per_mtok))}</td><td>{formatEur(Number(m.output_price_per_mtok))}</td></tr>
+                  <tr key={m.id}>
+                    <td>{m.id}{m.is_legacy ? " (Legacy)" : ""}</td>
+                    <td>{formatEur(Number(m.input_price_per_mtok))}</td>
+                    <td>{formatEur(Number(m.output_price_per_mtok))}</td>
+                  </tr>
                 ))}
               </tbody>
             </table>
@@ -154,7 +158,7 @@ for await (const chunk of stream) {
               <thead><tr><th>ID</th><th>Name</th><th>Status</th></tr></thead>
               <tbody>
                 {models.map((m) => (
-                  <tr key={m.id}><td>{m.id}</td><td>{m.display_name}</td><td>{m.is_active ? "Live" : "Coming soon"}</td></tr>
+                  <tr key={m.id}><td>{m.id}</td><td>{m.display_name}</td><td>{modelStatusLabel(m)}</td></tr>
                 ))}
               </tbody>
             </table>

@@ -3,48 +3,72 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  height: 44px;
-  padding: 10px 22px;
+  min-block-size: 40px;
+  padding: 8px 20px;
   border-radius: var(--y-radius-pill);
-  border: 2px solid transparent;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 700;
-  letter-spacing: -0.14px;
-  white-space: nowrap;
+  border: 1px solid transparent;
+  font-size: 0.875rem;
+  line-height: 1.35;
+  font-weight: 600;
+  letter-spacing: 0.005em;
   cursor: pointer;
   text-decoration: none;
-  transition: background-color var(--y-base) ease-out, border-color var(--y-base) ease-out;
+  transition:
+    background-color var(--y-base) var(--y-ease-soft),
+    border-color var(--y-base) var(--y-ease-soft),
+    box-shadow var(--y-base) var(--y-ease-soft),
+    color var(--y-base) var(--y-ease-soft);
 }
 .btn:hover { text-decoration: none; }
-.large { height: 52px; padding: 14px 30px; }
+.large { min-block-size: 48px; padding: 12px 28px; font-size: 0.9375rem; }
 .full { width: 100%; }
 
-.primary { background: var(--y-blue); color: #fff; }
-.primary:hover { background: var(--y-blue-hover); }
+.primary {
+  background: var(--y-blue);
+  color: #fff;
+  box-shadow: 0 1px 2px rgba(26, 115, 232, 0.25);
+}
+.primary:hover {
+  background: var(--y-blue-hover);
+  box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
+}
 
 .secondary {
-  background: var(--y-secondary-btn);
-  border-color: var(--y-secondary-btn-border);
-  color: var(--y-ink);
-  backdrop-filter: blur(20px);
+  background: var(--y-blue-soft);
+  border-color: transparent;
+  color: var(--y-blue-focus);
 }
-.secondary:hover { background: var(--y-soft); }
+.secondary:hover { background: var(--y-blue-soft-hover); }
 
-.outline { background: transparent; border-color: var(--y-hairline); color: var(--y-blue); }
-.outline:hover { background: rgba(0, 0, 0, 0.04); }
+.outline {
+  background: var(--y-canvas);
+  border-color: var(--y-border);
+  color: var(--y-blue);
+}
+.outline:hover {
+  background: var(--y-blue-soft);
+  border-color: rgba(26, 115, 232, 0.3);
+}
 
-.danger { background: transparent; border-color: var(--y-hairline); color: var(--y-negative); }
-.danger:hover { background: rgba(228, 30, 63, 0.06); }
+.danger {
+  background: var(--y-canvas);
+  border-color: var(--y-border);
+  color: var(--y-negative-ink);
+}
+.danger:hover {
+  background: var(--y-negative-soft);
+  border-color: rgba(217, 48, 37, 0.35);
+}
 
 .btn:disabled,
 .btn[aria-disabled="true"] {
-  background: transparent;
+  background: var(--y-surface-2);
   border-color: transparent;
   color: var(--y-disabled-text);
+  box-shadow: none;
   cursor: not-allowed;
 }
 
 @media (max-width: 767px) {
-  .responsiveLarge { height: 52px; padding: 14px 30px; }
+  .responsiveLarge { min-block-size: 48px; padding: 12px 28px; }
 }

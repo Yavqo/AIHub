@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Playground, { type PlaygroundTarget } from "./Playground";
 import { listModels } from "@/lib/catalog";
 import { loadDeployments, loadProjects, requireUser } from "@/lib/dashboard";
-import { DEFAULT_MODEL_ID } from "@/lib/models";
+import { DEFAULT_MODEL_ID, isDeployableModel } from "@/lib/models";
 import { noIndex } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Playground", robots: noIndex };
@@ -25,7 +25,7 @@ export default async function PlaygroundPage({ searchParams }: PageProps<"/playg
         isDeployment: true,
       })),
     ...models
-      .filter((m) => m.is_active)
+      .filter(isDeployableModel)
       .map((m) => ({ id: m.id, label: m.display_name, group: "Base models", modelName: m.display_name, hasSystemPrompt: false, isDeployment: false, status: "active" as const })),
   ];
   const initial = targets.find((t) => t.id === model)?.id ?? targets.find((t) => t.status === "active")?.id ?? DEFAULT_MODEL_ID;

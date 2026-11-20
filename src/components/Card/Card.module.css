@@ -2,8 +2,13 @@
   background: var(--y-canvas);
   border: 1px solid var(--y-hairline);
   border-radius: var(--y-radius);
-  padding: 32px;
+  padding: 28px;
+  box-shadow: var(--y-shadow-sm);
 }
-.soft { background: var(--y-soft); border-color: transparent; }
-.compact { padding: 24px; }
-@media (max-width: 767px) { .card { padding: 24px; } }
+.soft {
+  background: var(--y-soft);
+  border-color: var(--y-hairline);
+  box-shadow: none;
+}
+.compact { padding: 20px; }
+@media (max-width: 767px) { .card { padding: 20px; } }

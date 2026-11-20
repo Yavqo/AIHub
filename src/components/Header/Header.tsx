@@ -16,12 +16,11 @@ const NAV = [
 
 export default function Header({ signedIn }: { signedIn: boolean }) {
   const pathname = usePathname();
-  const hasHero = pathname === "/";
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -31,11 +30,10 @@ export default function Header({ signedIn }: { signedIn: boolean }) {
     document.body.style.overflow = open ? "hidden" : "";
   }, [open]);
 
-  const overHero = hasHero && !scrolled;
   const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
 
   return (
-    <header className={`${styles.header} ${overHero ? styles.overHero : ""}`} style={hasHero ? { marginBottom: "calc(-1 * var(--y-header-h))" } : undefined}>
+    <header className={`${styles.header} ${scrolled ? styles.scrolled : ""}`}>
       <nav className={styles.inner} aria-label="Main">
         <div className={styles.left}>
           <button className={`${styles.iconBtn} ${styles.menuBtn}`} aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}>
@@ -44,7 +42,7 @@ export default function Header({ signedIn }: { signedIn: boolean }) {
           <Link href="/" className={styles.logo} aria-label="Yavqo AIHub home">
             <Image
               className={styles.logoImg}
-              src={overHero ? "/brand/yavqo-logo-white.png" : "/brand/yavqo-logo-ink.png"}
+              src="/brand/yavqo-logo-ink.png"
               alt="Yavqo"
               width={63}
               height={22}
