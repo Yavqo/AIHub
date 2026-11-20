@@ -2,8 +2,7 @@
   border-radius: var(--y-radius);
   background: var(--y-midnight);
   color: #E8EAED;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: var(--y-shadow-md);
+  border: 1px solid #2A313C;
   overflow: hidden;
 }
 .bar {
@@ -11,15 +10,15 @@
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding: 8px 10px 8px 14px;
+  padding: 8px 10px 8px 12px;
   background: var(--y-midnight-elevated);
   border-bottom: 1px solid var(--y-on-media-line);
 }
 .tabs { display: flex; gap: 4px; flex-wrap: wrap; }
 .tab {
-  min-block-size: 32px;
-  padding: 4px 12px;
-  border-radius: var(--y-radius-pill);
+  min-block-size: 30px;
+  padding: 4px 10px;
+  border-radius: 5px;
   border: 0;
   background: transparent;
   color: var(--y-on-media-muted);
@@ -36,9 +35,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-block-size: 32px;
-  padding: 4px 12px;
-  border-radius: var(--y-radius-pill);
+  min-block-size: 30px;
+  padding: 4px 10px;
+  border-radius: 5px;
   border: 0;
   background: transparent;
   color: #E8EAED;
@@ -48,4 +47,4 @@
   transition: background-color var(--y-fast) var(--y-ease-soft);
 }
 .copy:hover { background: rgba(255, 255, 255, 0.1); }
-.pre { margin: 0; padding: 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.65; letter-spacing: 0; color: #E8EAED; }
+.pre { margin: 0; padding: 18px 20px; overflow-x: auto; font-size: 0.8125rem; line-height: 1.65; letter-spacing: 0; color: #E8EAED; }

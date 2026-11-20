@@ -4,19 +4,16 @@
   z-index: 50;
   min-block-size: var(--y-header-h);
   background: var(--y-header-blur-bg);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
   color: var(--y-ink);
   border-bottom: 1px solid var(--y-hairline);
-  transition: box-shadow var(--y-base) var(--y-ease-soft), background-color var(--y-base) var(--y-ease-soft);
 }
 .scrolled {
-  background: rgba(255, 255, 255, 0.96);
+  background: var(--y-canvas);
   box-shadow: var(--y-shadow-sm);
 }
 .inner {
   min-block-size: var(--y-header-h);
-  max-width: calc(1280px + 2 * var(--y-gutter));
+  max-width: calc(1240px + 2 * var(--y-gutter));
   margin-inline: auto;
   display: flex;
   align-items: center;
@@ -24,7 +21,7 @@
   gap: 16px;
   padding-inline: var(--y-gutter);
 }
-.left, .right { display: flex; align-items: center; gap: 6px; }
+.left, .right { display: flex; align-items: center; gap: 4px; }
 .logo { display: flex; align-items: center; gap: 10px; margin-right: 24px; color: var(--y-ink-strong); }
 .logo:hover { text-decoration: none; }
 .logoImg { height: 22px; width: auto; }
@@ -35,15 +32,14 @@
   border-left: 1px solid var(--y-border);
   line-height: 1.25;
   color: var(--y-muted);
-  letter-spacing: -0.01em;
 }
 
 .link {
   display: inline-flex;
   align-items: center;
-  min-block-size: 36px;
-  padding: 6px 14px;
-  border-radius: var(--y-radius-pill);
+  min-block-size: 34px;
+  padding: 6px 12px;
+  border-radius: var(--y-radius-sm);
   font-size: 0.875rem;
   line-height: 1.4;
   font-weight: 500;
@@ -69,10 +65,10 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border: 0;
-  border-radius: 50%;
+  border-radius: var(--y-radius-sm);
   background: transparent;
   color: var(--y-muted);
   cursor: pointer;
@@ -99,14 +95,14 @@
 .mobileTop { min-block-size: var(--y-header-h); display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--y-hairline); }
 .mobileLinks { display: flex; flex-direction: column; margin-top: 12px; }
 .mobileLink {
-  font-size: 1.25rem;
+  font-size: 1.125rem;
   line-height: 1.4;
   font-weight: 500;
   color: var(--y-ink-strong);
   padding: 16px 0;
   border-bottom: 1px solid var(--y-hairline);
 }
-.mobileCta { margin-top: auto; display: flex; flex-direction: column; gap: 12px; }
+.mobileCta { margin-top: auto; display: flex; flex-direction: column; gap: 10px; }
 
 @media (max-width: 767px) {
   .desktopOnly { display: none; }

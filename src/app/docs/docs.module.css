@@ -1,11 +1,9 @@
 .page { display: grid; grid-template-columns: 232px minmax(0, 1fr); gap: 56px; padding-block: 56px 96px; }
 .rail { position: sticky; top: calc(var(--y-header-h) + 24px); align-self: start; display: flex; flex-direction: column; gap: 2px; }
 .railTitle {
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--y-muted);
+  color: var(--y-ink-strong);
   padding: 0 12px 8px;
 }
 .railLink {

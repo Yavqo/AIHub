@@ -66,20 +66,19 @@
 @keyframes blink { 50% { opacity: 0; } }
 .composer { border-top: 1px solid var(--y-hairline); background: var(--y-soft); padding: 14px 16px; display: flex; gap: 12px; align-items: flex-end; }
 .input {
-  flex: 1; resize: none; min-block-size: 48px; max-height: 200px;
-  border: 1px solid var(--y-border); border-radius: 24px; padding: 12px 18px;
+  flex: 1; resize: none; min-block-size: 44px; max-height: 200px;
+  border: 1px solid var(--y-border); border-radius: var(--y-radius-swatch); padding: 10px 14px;
   font-size: 0.9375rem; line-height: 1.5; background: var(--y-canvas); color: var(--y-ink-strong);
   transition: border-color var(--y-fast) var(--y-ease-soft), box-shadow var(--y-fast) var(--y-ease-soft);
 }
 .input:focus { outline: none; border-color: var(--y-blue); box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.14); }
 .send {
-  flex: none; width: 48px; height: 48px; border-radius: 50%; border: 0;
+  flex: none; width: 44px; height: 44px; border-radius: var(--y-radius-swatch); border: 0;
   background: var(--y-blue); color: #fff; display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
-  box-shadow: 0 1px 3px rgba(26, 115, 232, 0.3);
-  transition: background-color var(--y-base) var(--y-ease-soft), box-shadow var(--y-base) var(--y-ease-soft);
+  transition: background-color var(--y-base) var(--y-ease-soft);
 }
-.send:hover { background: var(--y-blue-hover); box-shadow: 0 2px 6px rgba(26, 115, 232, 0.38); }
-.send:disabled { background: var(--y-surface-2); color: var(--y-disabled-text); box-shadow: none; cursor: not-allowed; }
+.send:hover { background: var(--y-blue-hover); }
+.send:disabled { background: var(--y-surface-2); color: var(--y-disabled-text); cursor: not-allowed; }
 .toolbar { display: flex; gap: 8px; flex-wrap: wrap; }
 @media (max-width: 1024px) {
   .page { grid-template-columns: 1fr; }

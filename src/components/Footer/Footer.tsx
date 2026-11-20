@@ -16,7 +16,7 @@ export default function Footer() {
         <div className={styles.top}>
           <div className={styles.brand}>
             <Image className={styles.logo} src="/brand/yavqo-logo-ink.png" alt="Yavqo" width={72} height={25} />
-            <p className={styles.intro}>AIHub is where you get keys, try prompts and track usage for Sunlight models.</p>
+            <p className={styles.intro}>Yavqo AIHub hosts Sunlight 2.1 and 2.1 Pro deployments with OpenAI-compatible endpoints and per-token billing in EUR.</p>
           </div>
           <div className={styles.cols}>
             {COLUMNS.map((col) => (

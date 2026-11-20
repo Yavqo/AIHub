@@ -1,22 +1,19 @@
 .dialog {
   width: min(540px, calc(100vw - 32px));
-  border: 1px solid var(--y-hairline);
+  border: 1px solid var(--y-border);
   border-radius: var(--y-radius-lg);
   padding: 28px;
   background: var(--y-canvas);
   color: var(--y-ink);
   box-shadow: var(--y-float-shadow);
 }
-.dialog::backdrop {
-  background: var(--y-scrim);
-  backdrop-filter: blur(4px);
-}
+.dialog::backdrop { background: var(--y-scrim); }
 .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; margin-bottom: 18px; }
-.title { font-size: 1.375rem; line-height: 1.3; font-weight: 600; color: var(--y-ink-strong); letter-spacing: -0.015em; }
+.title { font-size: 1.25rem; line-height: 1.3; font-weight: 600; color: var(--y-ink-strong); letter-spacing: -0.015em; }
 .close {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; margin: -8px -8px 0 0;
-  border: 0; border-radius: 50%; background: transparent; cursor: pointer; color: var(--y-muted);
+  width: 36px; height: 36px; margin: -6px -6px 0 0;
+  border: 0; border-radius: var(--y-radius-sm); background: transparent; cursor: pointer; color: var(--y-muted);
   transition: background-color var(--y-fast) var(--y-ease-soft), color var(--y-fast) var(--y-ease-soft);
 }
 .close:hover { background: var(--y-surface-2); color: var(--y-ink-strong); }
