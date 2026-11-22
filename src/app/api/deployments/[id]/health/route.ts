@@ -1,6 +1,7 @@
 import { listModels } from "@/lib/catalog";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isSupabaseConfigured, serverEnv } from "@/lib/env";
 import { resolveUpstream } from "@/lib/gateway";
+import { modelKind } from "@/lib/models";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -18,10 +19,28 @@ export async function GET(_req: Request, ctx: RouteContext<"/api/deployments/[id
   if (!data) return Response.json({ error: "Deployment not found" }, { status: 404 });
 
   const model = (await listModels()).find((m) => m.id === data.base_model_id);
+  const started = Date.now();
+
+  if (model && modelKind(model) !== "chat") {
+    if (!serverEnv.geminiApiKey) {
+      return Response.json({ ok: false, latency_ms: Date.now() - started, status: data.status });
+    }
+    const base = (model.upstream_base_url?.trim() || serverEnv.geminiBaseUrl).replace(/\/$/, "");
+    try {
+      const res = await fetch(`${base}/models/${encodeURIComponent(model.upstream_model)}`, {
+        cache: "no-store",
+        headers: { "x-goog-api-key": serverEnv.geminiApiKey },
+        signal: AbortSignal.timeout(8000),
+      });
+      return Response.json({ ok: res.ok, latency_ms: Date.now() - started, status: data.status });
+    } catch {
+      return Response.json({ ok: false, latency_ms: Date.now() - started, status: data.status });
+    }
+  }
+
   const upstream = resolveUpstream({ upstream_base_url: model?.upstream_base_url ?? null });
   const checkUrl = upstream.isCustom ? `${upstream.baseUrl}/models` : `${upstream.baseUrl}/health`;
 
-  const started = Date.now();
   try {
     const res = await fetch(checkUrl, {
       cache: "no-store",

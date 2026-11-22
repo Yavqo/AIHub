@@ -18,6 +18,8 @@ export type ApiKey = {
   created_at: string;
 };
 
+export type ModelKind = "chat" | "realtime" | "tts" | "decision";
+
 export type Model = {
   id: string;
   display_name: string;
@@ -27,9 +29,11 @@ export type Model = {
   upstream_base_url?: string | null;
   is_active: boolean;
   is_legacy?: boolean;
+  kind?: ModelKind;
   sort_order: number;
   input_price_per_mtok: number;
   output_price_per_mtok: number;
+  price_per_minute?: number | null;
   currency: string;
 };
 
@@ -43,6 +47,7 @@ export type Deployment = {
   system_prompt: string | null;
   temperature: number | null;
   max_tokens: number | null;
+  voice?: string | null;
   status: "active" | "paused" | "suspended";
   suspended_reason: string | null;
   suspended_at: string | null;

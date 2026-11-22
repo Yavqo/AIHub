@@ -4,7 +4,7 @@ import Card from "@/components/Card/Card";
 import { listModels } from "@/lib/catalog";
 import { loadBilling, loadCredits, loadDeployments, loadProjects, monthRange, sumBilling, type BillingRow } from "@/lib/dashboard";
 import PromotionCodes from "./PromotionCodes";
-import { formatEur } from "@/lib/models";
+import { formatEur, modelKind } from "@/lib/models";
 import styles from "../dashboard.module.css";
 
 export const metadata: Metadata = { title: "Billing" };
@@ -104,15 +104,28 @@ export default async function BillingPage({ searchParams }: PageProps<"/dashboar
         <h2 className="y-feature" style={{ marginBottom: 16 }}>Pricing</h2>
         <div className={styles.tableWrap}>
           <table className={styles.table}>
-            <thead><tr><th>Model</th><th>Input, per 1M tokens</th><th>Output, per 1M tokens</th></tr></thead>
+            <thead><tr><th>Model</th><th>Input / Session</th><th>Output</th></tr></thead>
             <tbody>
-              {models.filter((m) => m.is_active).map((m) => (
-                <tr key={m.id}>
-                  <td className={styles.strong}>{m.display_name}{m.is_legacy ? " (Legacy)" : ""}</td>
-                  <td>{formatEur(Number(m.input_price_per_mtok))}</td>
-                  <td>{formatEur(Number(m.output_price_per_mtok))}</td>
-                </tr>
-              ))}
+              {models.filter((m) => m.is_active).map((m) => {
+                const kind = modelKind(m);
+                return (
+                  <tr key={m.id}>
+                    <td className={styles.strong}>{m.display_name}{m.is_legacy ? " (Legacy)" : ""}</td>
+                    <td>
+                      {kind === "realtime"
+                        ? `${formatEur(Number(m.price_per_minute ?? 0.04))} / min`
+                        : `${formatEur(Number(m.input_price_per_mtok))} / 1M tokens`}
+                    </td>
+                    <td>
+                      {kind === "realtime"
+                        ? "Included"
+                        : kind === "decision"
+                          ? "€0.00 (0 tokens)"
+                          : `${formatEur(Number(m.output_price_per_mtok))} / 1M tokens`}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

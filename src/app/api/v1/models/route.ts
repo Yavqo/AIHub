@@ -16,7 +16,15 @@ export async function GET(req: Request) {
   return Response.json({
     object: "list",
     data: [
-      ...models.filter((m) => m.is_active).map((m) => ({ id: m.id, object: "model", created: 0, owned_by: "yavqo", name: m.display_name, ...(m.is_legacy ? { legacy: true } : {}) })),
+      ...models.filter((m) => m.is_active).map((m) => ({
+        id: m.id,
+        object: "model",
+        created: 0,
+        owned_by: "yavqo",
+        name: m.display_name,
+        kind: m.kind ?? "chat",
+        ...(m.is_legacy ? { legacy: true } : {}),
+      })),
       ...((deployments ?? []) as Deployment[]).map((d) => ({ id: d.slug, object: "model", created: 0, owned_by: "yavqo", name: d.name, base_model: d.base_model_id })),
     ],
   });

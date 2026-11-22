@@ -4,7 +4,7 @@ import { z } from "zod";
 import { serverEnv } from "@/lib/env";
 import { apiError } from "@/lib/errors";
 import type { Target } from "@/lib/deployments";
-import { costEur } from "@/lib/models";
+import { costEur, modelKind, modelRouteSuffix } from "@/lib/models";
 import { addDeploymentTokens, takeDeploymentSlot } from "@/lib/ratelimit";
 import type { Model } from "@/lib/types";
 import { recordUsage, type UsageEntry } from "@/lib/usage";
@@ -92,6 +92,15 @@ function applyDeployment(body: ChatBody, target: Target): ChatBody {
 }
 
 export async function forwardChat(input: ChatBody, target: Target, caller: Caller): Promise<Response> {
+  const kind = modelKind(target.model);
+  if (kind !== "chat") {
+    return apiError(
+      400,
+      `Model '${target.deployment?.slug ?? target.model.id}' is a ${kind} model. Call ${modelRouteSuffix(kind)} instead.`,
+      "invalid_request_error",
+      "wrong_model_endpoint",
+    );
+  }
   const started = Date.now();
   const { model, deployment } = target;
   const servedAs = deployment?.slug ?? model.id;

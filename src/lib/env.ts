@@ -12,6 +12,8 @@ export const serverEnv = {
   gatewayApiKey: read("GATEWAY_API_KEY"),
   orcarouterApiKey: read("ORCAROUTER_API_KEY"),
   freemodelApiKey: read("FREEMODEL_API_KEY"),
+  geminiApiKey: read("GEMINI_API_KEY"),
+  geminiBaseUrl: (read("GEMINI_BASE_URL") || "https://generativelanguage.googleapis.com/v1beta").replace(/\/$/, ""),
   rateLimitPerMin: Number.parseInt(read("RATE_LIMIT_PER_MIN") || "60", 10),
 };
 

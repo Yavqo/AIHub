@@ -11,6 +11,7 @@ const updateSchema = z
     system_prompt: deploymentFields.system_prompt,
     temperature: deploymentFields.temperature,
     max_tokens: deploymentFields.max_tokens,
+    voice: deploymentFields.voice,
     rpm_limit: deploymentFields.rpm_limit,
     tpm_limit: deploymentFields.tpm_limit,
     status: z.enum(["active", "paused"]).optional(),
@@ -34,6 +35,7 @@ export async function PATCH(req: Request, ctx: RouteContext<"/api/deployments/[i
   if (!parsed.success) return Response.json({ error: "Check the deployment settings." }, { status: 400 });
   const patch = { ...parsed.data, updated_at: new Date().toISOString() };
   if (typeof patch.system_prompt === "string") patch.system_prompt = patch.system_prompt.trim() || null;
+  if (typeof patch.voice === "string") patch.voice = patch.voice.trim() || null;
   const { data, error } = await supabase.from("aihub_deployments").update(patch).eq("id", id).select().maybeSingle();
   if (error?.message === "deployment_suspended") return Response.json({ error: SUSPENDED }, { status: 403 });
   if (error) return Response.json({ error: error.message }, { status: 500 });

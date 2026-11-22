@@ -32,6 +32,7 @@ export async function POST(req: Request) {
     .insert({
       ...parsed.data,
       system_prompt: parsed.data.system_prompt?.trim() || null,
+      voice: parsed.data.voice?.trim() || null,
       owner_id: user.id,
       slug: makeSlug(parsed.data.name),
     })

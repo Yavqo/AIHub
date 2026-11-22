@@ -62,6 +62,7 @@ export const deploymentFields = {
   system_prompt: z.string().max(20_000).nullable().optional(),
   temperature: z.number().min(0).max(2).nullable().optional(),
   max_tokens: z.number().int().min(1).max(32_000).nullable().optional(),
+  voice: z.string().trim().max(40).nullable().optional(),
   rpm_limit: z.number().int().min(1).max(10_000).optional(),
   tpm_limit: z.number().int().min(1_000).max(10_000_000).optional(),
 };

@@ -7,20 +7,31 @@ import { Button, ButtonLink } from "@/components/Button/Button";
 import Card from "@/components/Card/Card";
 import CodeBlock from "@/components/CodeBlock/CodeBlock";
 import DeployTerminal, { type DeployStep } from "@/components/DeployTerminal/DeployTerminal";
-import { TextArea, TextField } from "@/components/FormField/FormField";
+import { SelectField, TextArea, TextField } from "@/components/FormField/FormField";
 import Icon from "@/components/Icon/Icon";
 import Modal from "@/components/Modal/Modal";
 import StatusChip from "@/components/StatusChip/StatusChip";
-import { formatEur, isDeployableModel } from "@/lib/models";
+import {
+  DEFAULT_VOICE,
+  formatEur,
+  formatModelPriceSummary,
+  isDeployableModel,
+  modelKind,
+  modelKindLabel,
+  modelRouteSuffix,
+  SUNLIGHT_VOICES,
+} from "@/lib/models";
 import { apiBaseUrl } from "@/lib/site";
-import { chatSnippets } from "@/lib/snippets";
-import type { Deployment, Model, Project } from "@/lib/types";
+import { snippetsForModel } from "@/lib/snippets";
+import type { Deployment, Model, ModelKind, Project } from "@/lib/types";
 import dash from "../../dashboard.module.css";
 import styles from "./project.module.css";
 
 type Totals = { requests: number; input_tokens: number; output_tokens: number; cost_eur: number };
 
-const endpointFor = (d: Deployment) => `${apiBaseUrl}/deployments/${d.slug}`;
+const endpointFor = (d: Deployment, kind: ModelKind = "chat") => `${apiBaseUrl}/deployments/${d.slug}${kind === "chat" ? "" : modelRouteSuffix(kind)}`;
+const baseUrlFor = (d: Deployment) => `${apiBaseUrl}/deployments/${d.slug}`;
+const docsAnchorFor = (kind: ModelKind) => (kind === "tts" ? "/docs#tts" : kind === "decision" ? "/docs#decisions" : kind === "realtime" ? "/docs#realtime" : "/docs");
 const num = (n: number) => new Intl.NumberFormat("en", { notation: n >= 100_000 ? "compact" : "standard" }).format(n);
 
 function CopyText({ text, label }: { text: string; label: string }) {
@@ -44,26 +55,45 @@ function CopyText({ text, label }: { text: string; label: string }) {
   );
 }
 
-type FormState = { name: string; system_prompt: string; temperature: string; max_tokens: string; rpm_limit: string; tpm_limit: string };
-const emptyForm: FormState = { name: "", system_prompt: "", temperature: "", max_tokens: "", rpm_limit: "60", tpm_limit: "200000" };
+type FormState = {
+  name: string;
+  system_prompt: string;
+  temperature: string;
+  max_tokens: string;
+  voice: string;
+  rpm_limit: string;
+  tpm_limit: string;
+};
+const emptyForm: FormState = {
+  name: "",
+  system_prompt: "",
+  temperature: "",
+  max_tokens: "",
+  voice: DEFAULT_VOICE,
+  rpm_limit: "60",
+  tpm_limit: "200000",
+};
 
 const isWhole = (v: string, min: number, max: number) => Number.isInteger(Number(v)) && Number(v) >= min && Number(v) <= max;
 
-function toPayload(f: FormState) {
+function toPayload(f: FormState, kind: ModelKind) {
   return {
     name: f.name.trim(),
     system_prompt: f.system_prompt.trim() || null,
-    temperature: f.temperature === "" ? null : Number(f.temperature),
-    max_tokens: f.max_tokens === "" ? null : Number(f.max_tokens),
+    temperature: kind === "chat" || kind === "realtime" ? (f.temperature === "" ? null : Number(f.temperature)) : null,
+    max_tokens: kind === "chat" ? (f.max_tokens === "" ? null : Number(f.max_tokens)) : null,
+    voice: kind === "tts" || kind === "realtime" ? f.voice || DEFAULT_VOICE : null,
     rpm_limit: Number(f.rpm_limit),
     tpm_limit: Number(f.tpm_limit),
   };
 }
 
-function formError(f: FormState): string | null {
+function formError(f: FormState, kind: ModelKind): string | null {
   if (!f.name.trim()) return "Give the deployment a name.";
-  if (f.temperature !== "" && !(Number(f.temperature) >= 0 && Number(f.temperature) <= 2)) return "Temperature must be between 0 and 2.";
-  if (f.max_tokens !== "" && !(Number.isInteger(Number(f.max_tokens)) && Number(f.max_tokens) >= 1 && Number(f.max_tokens) <= 32000)) {
+  if ((kind === "chat" || kind === "realtime") && f.temperature !== "" && !(Number(f.temperature) >= 0 && Number(f.temperature) <= 2)) {
+    return "Temperature must be between 0 and 2.";
+  }
+  if (kind === "chat" && f.max_tokens !== "" && !(Number.isInteger(Number(f.max_tokens)) && Number(f.max_tokens) >= 1 && Number(f.max_tokens) <= 32000)) {
     return "Max tokens must be a whole number from 1 to 32,000.";
   }
   if (!isWhole(f.rpm_limit, 1, 10_000)) return "Requests per minute must be a whole number from 1 to 10,000.";
@@ -71,22 +101,64 @@ function formError(f: FormState): string | null {
   return null;
 }
 
-function SettingsFields({ form, setForm }: { form: FormState; setForm: (f: FormState) => void }) {
+function SettingsFields({ form, setForm, kind }: { form: FormState; setForm: (f: FormState) => void; kind: ModelKind }) {
+  const promptLabel =
+    kind === "tts"
+      ? "Style direction (optional)"
+      : kind === "decision"
+        ? "Shared context (optional)"
+        : kind === "realtime"
+          ? "System instructions (optional)"
+          : "System prompt (optional)";
+  const promptHint =
+    kind === "tts"
+      ? "Controls tone, pacing or accent. Prepended to each speech request."
+      : kind === "decision"
+        ? "Prepended to string inputs before your questions are evaluated."
+        : kind === "realtime"
+          ? "Locked into every ephemeral session token for this deployment."
+          : "Sent before every conversation. Its tokens count as input.";
+  const nameHint =
+    kind === "tts"
+      ? "For example: Narration voice"
+      : kind === "decision"
+        ? "For example: Ticket router"
+        : kind === "realtime"
+          ? "For example: Voice concierge"
+          : "For example: Support assistant";
+
   return (
     <>
-      <TextField id="dep-name" label="Deployment name" value={form.name} maxLength={80} onChange={(e) => setForm({ ...form, name: e.target.value })} hint="For example: Support assistant" />
+      <TextField id="dep-name" label="Deployment name" value={form.name} maxLength={80} onChange={(e) => setForm({ ...form, name: e.target.value })} hint={nameHint} />
+      {kind === "tts" || kind === "realtime" ? (
+        <SelectField
+          id="dep-voice"
+          label="Default voice"
+          value={form.voice || DEFAULT_VOICE}
+          onChange={(e) => setForm({ ...form, voice: e.target.value })}
+          hint="Can be overridden per request."
+        >
+          {SUNLIGHT_VOICES.map((v) => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </SelectField>
+      ) : null}
       <TextArea
         id="dep-system"
-        label="System prompt (optional)"
-        rows={4}
+        label={promptLabel}
+        rows={3}
         value={form.system_prompt}
         onChange={(e) => setForm({ ...form, system_prompt: e.target.value })}
-        hint="Sent before every conversation. Its tokens count as input."
+        hint={promptHint}
       />
-      <div className={styles.row2}>
+      {kind === "chat" ? (
+        <div className={styles.row2}>
+          <TextField id="dep-temp" label="Temperature" inputMode="decimal" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} hint="0 to 2. Empty uses the default." />
+          <TextField id="dep-max" label="Max tokens" inputMode="numeric" value={form.max_tokens} onChange={(e) => setForm({ ...form, max_tokens: e.target.value })} hint="Reply length cap. Empty means none." />
+        </div>
+      ) : kind === "realtime" ? (
         <TextField id="dep-temp" label="Temperature" inputMode="decimal" value={form.temperature} onChange={(e) => setForm({ ...form, temperature: e.target.value })} hint="0 to 2. Empty uses the default." />
-        <TextField id="dep-max" label="Max tokens" inputMode="numeric" value={form.max_tokens} onChange={(e) => setForm({ ...form, max_tokens: e.target.value })} hint="Reply length cap. Empty means none." />
-      </div>
+      ) : null}
       <div className={styles.row2}>
         <TextField id="dep-rpm" label="Requests per minute" inputMode="numeric" value={form.rpm_limit} onChange={(e) => setForm({ ...form, rpm_limit: e.target.value })} hint="Rate limit. 1 to 10,000." />
         <TextField id="dep-tpm" label="Tokens per minute" inputMode="numeric" value={form.tpm_limit} onChange={(e) => setForm({ ...form, tpm_limit: e.target.value })} hint="Input plus output. 1,000 to 10,000,000." />
@@ -124,20 +196,24 @@ export default function ProjectDetail({
   const [deleting, setDeleting] = useState<Deployment | null>(null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
-  const [run, setRun] = useState<{ id: number; steps: DeployStep[]; command: string } | null>(null);
+  const [run, setRun] = useState<{ id: number; steps: DeployStep[]; command: string; suffix: string } | null>(null);
   const [liveSlug, setLiveSlug] = useState("");
   const runId = useRef(0);
   const deployed = useRef<Deployment | null>(null);
 
+  const findModel = (id: string) => models.find((x) => x.id === id);
+  const kindFor = (id: string): ModelKind => {
+    const m = findModel(id);
+    return m ? modelKind(m) : "chat";
+  };
   const modelName = (id: string) => {
-    const m = models.find((x) => x.id === id);
+    const m = findModel(id);
     if (!m) return id;
     return m.is_legacy ? `${m.display_name} (Legacy)` : m.display_name;
   };
 
   function closeDeploy() {
     runId.current++;
-    // Closing mid-run doesn't undo a deployment that was already created.
     const d = deployed.current;
     if (d) {
       setDeployments((ds) => [d, ...ds.filter((x) => x.id !== d.id)]);
@@ -151,39 +227,47 @@ export default function ProjectDetail({
     setError("");
   }
 
-  // Each terminal line is a real step: the deployment is created, routed and checked
-  // against the model gateway while the output plays. Durations pace the whole run to
-  // roughly 30 to 60 seconds.
   function onDeploy(e: FormEvent) {
     e.preventDefault();
-    const problem = formError(form);
-    if (problem) return setError(problem);
     const model = deployableModels.find((m) => m.id === modelId);
     if (!model) return setError("Choose a model.");
+    const kind = modelKind(model);
+    const problem = formError(form, kind);
+    if (problem) return setError(problem);
     setError("");
     deployed.current = null;
     setLiveSlug("");
-    const payload = toPayload(form);
+    const payload = toPayload(form, kind);
     const id = ++runId.current;
+    const suffix = modelRouteSuffix(kind);
     const need = () => {
       if (!deployed.current) throw new Error("Deployment was not created.");
       return deployed.current;
     };
 
+    const settingSummary = [
+      payload.voice ? `voice ${payload.voice}` : null,
+      payload.system_prompt ? `instructions ${payload.system_prompt.length} chars` : "no default instructions",
+      kind === "chat" || kind === "realtime" ? (payload.temperature != null ? `temperature ${payload.temperature}` : "default temperature") : null,
+      kind === "chat" ? (payload.max_tokens != null ? `max tokens ${payload.max_tokens}` : "no max tokens") : null,
+    ]
+      .filter(Boolean)
+      .join(" · ");
+
     const steps: DeployStep[] = [
       {
         label: "Validating configuration",
-        duration: [3000, 5000],
-        run: async () => `name "${payload.name}"`,
+        duration: [2500, 4500],
+        run: async () => `name "${payload.name}" · ${modelKindLabel(model)}`,
       },
       {
         label: `Resolving base model ${model.id}`,
-        duration: [3000, 6000],
+        duration: [2500, 5000],
         run: async () => model.display_name,
       },
       {
         label: `Creating deployment in ${project.name}`,
-        duration: [6000, 12000],
+        duration: [5000, 10000],
         run: async () => {
           const res = await fetch("/api/deployments", {
             method: "POST",
@@ -199,27 +283,22 @@ export default function ProjectDetail({
       },
       {
         label: "Applying settings",
-        duration: [4000, 7000],
-        run: async () =>
-          [
-            payload.system_prompt ? `system prompt ${payload.system_prompt.length} chars` : "no system prompt",
-            payload.temperature != null ? `temperature ${payload.temperature}` : "default temperature",
-            payload.max_tokens != null ? `max tokens ${payload.max_tokens}` : "no max tokens",
-          ].join(" · "),
+        duration: [3500, 6000],
+        run: async () => settingSummary,
       },
       {
         label: "Setting rate limits",
-        duration: [3000, 5000],
+        duration: [2500, 4500],
         run: async () => `${num(need().rpm_limit)} requests/min · ${num(need().tpm_limit)} tokens/min`,
       },
       {
         label: "Routing endpoint",
-        duration: [5000, 10000],
-        run: async () => `/api/v1/deployments/${need().slug}`,
+        duration: [4000, 8000],
+        run: async () => `/api/v1/deployments/${need().slug}${suffix}`,
       },
       {
         label: "Checking model gateway",
-        duration: [5000, 9000],
+        duration: [4000, 8000],
         run: async () => {
           const res = await fetch(`/api/deployments/${need().id}/health`, { cache: "no-store" });
           const json = await res.json().catch(() => ({}));
@@ -228,16 +307,16 @@ export default function ProjectDetail({
         },
       },
       {
-        label: "Enabling per-token billing",
-        duration: [3000, 6000],
-        run: async () =>
-          `${formatEur(Number(model.input_price_per_mtok))} / 1M in · ${formatEur(Number(model.output_price_per_mtok))} / 1M out`,
+        label: kind === "realtime" ? "Enabling per-minute billing" : "Enabling per-token billing",
+        duration: [2500, 5000],
+        run: async () => formatModelPriceSummary(model),
       },
     ];
 
     setRun({
       id,
       steps,
+      suffix,
       command: `yavqo deploy ${model.id} --project "${project.name}" --name "${payload.name}"`,
     });
   }
@@ -253,7 +332,6 @@ export default function ProjectDetail({
 
   function onRunError(message: string) {
     setError(message);
-    // If the deployment was created before a later step stopped, still show it.
     const d = deployed.current;
     if (d) setDeployments((ds) => [d, ...ds.filter((x) => x.id !== d.id)]);
   }
@@ -280,6 +358,7 @@ export default function ProjectDetail({
       system_prompt: d.system_prompt ?? "",
       temperature: d.temperature == null ? "" : String(d.temperature),
       max_tokens: d.max_tokens == null ? "" : String(d.max_tokens),
+      voice: d.voice ?? DEFAULT_VOICE,
       rpm_limit: String(d.rpm_limit),
       tpm_limit: String(d.tpm_limit),
     });
@@ -288,9 +367,10 @@ export default function ProjectDetail({
   async function onSaveEdit(e: FormEvent) {
     e.preventDefault();
     if (!editing) return;
-    const problem = formError(editForm);
+    const kind = kindFor(editing.base_model_id);
+    const problem = formError(editForm, kind);
     if (problem) return setError(problem);
-    if (await patch(editing, toPayload(editForm))) setEditing(null);
+    if (await patch(editing, toPayload(editForm, kind))) setEditing(null);
   }
 
   async function onDelete() {
@@ -308,6 +388,8 @@ export default function ProjectDetail({
   }
 
   const selectedModel = deployableModels.find((m) => m.id === modelId);
+  const selectedKind: ModelKind = selectedModel ? modelKind(selectedModel) : "chat";
+  const createdKind: ModelKind = created ? kindFor(created.base_model_id) : "chat";
 
   return (
     <>
@@ -340,49 +422,58 @@ export default function ProjectDetail({
         {deployments.length === 0 ? (
           <div className={dash.empty}>
             <h3 className="y-sub">Deploy your first model</h3>
-            <p className="y-muted">Pick a Sunlight model, give it a name and a system prompt, and get an endpoint for your app.</p>
+            <p className="y-muted">Pick a Sunlight chat, voice, speech or decision model, configure defaults, and get an endpoint for your app.</p>
             <Button onClick={() => setDeployOpen(true)} disabled={!deployableModels.length}>Deploy a model</Button>
           </div>
         ) : (
           <div className={styles.list}>
-            {deployments.map((d) => (
-              <div key={d.id} className={styles.item}>
-                <div className={styles.itemMain}>
-                  <div className={styles.itemTop}>
-                    <span className={styles.itemName}>{d.name}</span>
-                    <StatusChip tone={d.status === "active" ? "positive" : d.status === "suspended" ? "negative" : "neutral"}>
-                      {d.status === "active" ? "Active" : d.status === "suspended" ? "Suspended" : "Paused"}
-                    </StatusChip>
-                  </div>
-                  <div className={styles.meta}>
-                    <span>Model <strong>{modelName(d.base_model_id)}</strong></span>
-                    <span>Name in API <strong className={dash.mono}>{d.slug}</strong></span>
-                    <span>Limits <strong>{num(d.rpm_limit)} req/min · {num(d.tpm_limit)} tokens/min</strong></span>
-                    <span>{monthLabel} <strong>{formatEur(spendByDeployment[d.id] ?? 0)}</strong></span>
-                  </div>
-                  {d.status === "suspended" ? (
-                    <div className={styles.suspended} role="note">
-                      <strong>Suspended by Yavqo{d.suspended_at ? ` on ${new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(d.suspended_at))}` : ""}.</strong>{" "}
-                      Calls to this endpoint return an error.{d.suspended_reason ? ` Reason: ${d.suspended_reason}.` : ""} Contact Yavqo support if you think this is a mistake.
+            {deployments.map((d) => {
+              const kind = kindFor(d.base_model_id);
+              const url = endpointFor(d, kind);
+              return (
+                <div key={d.id} className={styles.item}>
+                  <div className={styles.itemMain}>
+                    <div className={styles.itemTop}>
+                      <span className={styles.itemName}>{d.name}</span>
+                      <StatusChip tone={d.status === "active" ? "positive" : d.status === "suspended" ? "negative" : "neutral"}>
+                        {d.status === "active" ? "Active" : d.status === "suspended" ? "Suspended" : "Paused"}
+                      </StatusChip>
                     </div>
-                  ) : null}
-                  <div className={styles.endpoint}>
-                    <code title={endpointFor(d)}>{endpointFor(d)}</code>
-                    <CopyText text={endpointFor(d)} label={`Copy endpoint for ${d.name}`} />
+                    <div className={styles.meta}>
+                      <span>Model <strong>{modelName(d.base_model_id)}</strong></span>
+                      <span>Name in API <strong className={dash.mono}>{d.slug}</strong></span>
+                      {d.voice ? <span>Voice <strong>{d.voice}</strong></span> : null}
+                      <span>Limits <strong>{num(d.rpm_limit)} req/min · {num(d.tpm_limit)} tokens/min</strong></span>
+                      <span>{monthLabel} <strong>{formatEur(spendByDeployment[d.id] ?? 0)}</strong></span>
+                    </div>
+                    {d.status === "suspended" ? (
+                      <div className={styles.suspended} role="note">
+                        <strong>Suspended by Yavqo{d.suspended_at ? ` on ${new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(d.suspended_at))}` : ""}.</strong>{" "}
+                        Calls to this endpoint return an error.{d.suspended_reason ? ` Reason: ${d.suspended_reason}.` : ""} Contact Yavqo support if you think this is a mistake.
+                      </div>
+                    ) : null}
+                    <div className={styles.endpoint}>
+                      <code title={url}>{url}</code>
+                      <CopyText text={url} label={`Copy endpoint for ${d.name}`} />
+                    </div>
                   </div>
+                  {d.status === "suspended" ? null : (
+                    <div className={styles.actions}>
+                      {kind === "chat" ? (
+                        <ButtonLink href={`/playground?model=${d.slug}`} variant="outline">Try it</ButtonLink>
+                      ) : (
+                        <ButtonLink href={docsAnchorFor(kind)} variant="outline">API docs</ButtonLink>
+                      )}
+                      <Button variant="outline" onClick={() => openEdit(d)}>Settings</Button>
+                      <Button variant="outline" disabled={busy} onClick={() => patch(d, { status: d.status === "active" ? "paused" : "active" })}>
+                        {d.status === "active" ? "Pause" : "Resume"}
+                      </Button>
+                      <Button variant="danger" onClick={() => setDeleting(d)}>Delete</Button>
+                    </div>
+                  )}
                 </div>
-                {d.status === "suspended" ? null : (
-                  <div className={styles.actions}>
-                    <ButtonLink href={`/playground?model=${d.slug}`} variant="outline">Try it</ButtonLink>
-                    <Button variant="outline" onClick={() => openEdit(d)}>Settings</Button>
-                    <Button variant="outline" disabled={busy} onClick={() => patch(d, { status: d.status === "active" ? "paused" : "active" })}>
-                      {d.status === "active" ? "Pause" : "Resume"}
-                    </Button>
-                    <Button variant="danger" onClick={() => setDeleting(d)}>Delete</Button>
-                  </div>
-                )}
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
         {error && !deployOpen && !editing && !deleting ? <p className={styles.formError} role="alert">{error}</p> : null}
@@ -406,7 +497,7 @@ export default function ProjectDetail({
               title="Yavqo AIHub · deploy"
               command={run.command}
               steps={run.steps}
-              doneText={`✓ Live at ${apiBaseUrl}/deployments/${liveSlug}`}
+              doneText={`✓ Live at ${apiBaseUrl}/deployments/${liveSlug}${run.suffix}`}
               onDone={onRunDone}
               onError={onRunError}
             />
@@ -419,15 +510,19 @@ export default function ProjectDetail({
         ) : created ? (
           <div className={styles.form}>
             <p className="y-muted">
-              Call <strong style={{ color: "var(--y-ink)" }}>{created.name}</strong> with any OpenAI SDK. Use an API key from this project.
+              Call <strong style={{ color: "var(--y-ink)" }}>{created.name}</strong> with an API key from this project.
             </p>
             <div className={styles.endpoint}>
-              <code>{endpointFor(created)}</code>
-              <CopyText text={endpointFor(created)} label="Copy endpoint" />
+              <code>{endpointFor(created, createdKind)}</code>
+              <CopyText text={endpointFor(created, createdKind)} label="Copy endpoint" />
             </div>
-            <CodeBlock snippets={chatSnippets(endpointFor(created), created.slug, { prompt: "Hello" })} />
+            <CodeBlock snippets={snippetsForModel(createdKind, baseUrlFor(created), created.slug, { voice: created.voice ?? undefined, prompt: "Hello" })} />
             <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-              <ButtonLink href={`/playground?model=${created.slug}`}>Try in playground</ButtonLink>
+              {createdKind === "chat" ? (
+                <ButtonLink href={`/playground?model=${created.slug}`}>Try in playground</ButtonLink>
+              ) : (
+                <ButtonLink href={docsAnchorFor(createdKind)}>Read API docs</ButtonLink>
+              )}
               <Button variant="outline" onClick={closeDeploy}>Done</Button>
             </div>
           </div>
@@ -436,25 +531,30 @@ export default function ProjectDetail({
             <div className={styles.modelOptions} role="radiogroup" aria-label="Base model">
               {deployableModels.map((m) => (
                 <button key={m.id} type="button" role="radio" aria-checked={m.id === modelId} className={styles.modelOption} onClick={() => setModelId(m.id)}>
-                  <span className={styles.modelOptionName}>{m.display_name}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8 }}>
+                    <span className={styles.modelOptionName}>{m.display_name}</span>
+                    <span className="y-caption">{modelKindLabel(m)}</span>
+                  </div>
                   <span className="y-muted y-ui">{m.description}</span>
-                  <span className={styles.price}>
-                    {formatEur(Number(m.input_price_per_mtok))} per 1M input tokens · {formatEur(Number(m.output_price_per_mtok))} per 1M output tokens
-                  </span>
+                  <span className={styles.price}>{formatModelPriceSummary(m)}</span>
                 </button>
               ))}
             </div>
-            <SettingsFields form={form} setForm={setForm} />
+            <SettingsFields form={form} setForm={setForm} kind={selectedKind} />
             {error ? <p className={styles.formError} role="alert">{error}</p> : null}
             <Button type="submit" size="large" full disabled={busy || !form.name.trim() || !selectedModel}>{busy ? "Deploying…" : "Deploy"}</Button>
-            <p className={styles.fine}>You pay only for tokens used. Billing is per project, at the prices above.</p>
+            <p className={styles.fine}>
+              {selectedKind === "realtime"
+                ? "Billed per minute of minted session window to this project."
+                : "You pay only for tokens used. Billing is per project, at the prices above."}
+            </p>
           </form>
         )}
       </Modal>
 
       <Modal open={Boolean(editing)} title="Deployment settings" onClose={() => setEditing(null)}>
         <form className={styles.form} onSubmit={onSaveEdit}>
-          <SettingsFields form={editForm} setForm={setEditForm} />
+          <SettingsFields form={editForm} setForm={setEditForm} kind={editing ? kindFor(editing.base_model_id) : "chat"} />
           {error ? <p className={styles.formError} role="alert">{error}</p> : null}
           <Button type="submit" size="large" full disabled={busy || !editForm.name.trim()}>{busy ? "Saving…" : "Save changes"}</Button>
           <p className={styles.fine}>The endpoint stays the same. Changes apply to the next request.</p>

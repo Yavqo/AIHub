@@ -1,9 +1,18 @@
 import "server-only";
 import { after } from "next/server";
+import type { z } from "zod";
 import { serverEnv } from "@/lib/env";
 import { apiError, notConfigured } from "@/lib/errors";
-import { chatBodySchema, forwardChat } from "@/lib/gateway";
-import { isTargetError, resolveTarget } from "@/lib/deployments";
+import { chatBodySchema, forwardChat, type Caller } from "@/lib/gateway";
+import {
+  createRealtimeSession,
+  decisionBodySchema,
+  forwardDecision,
+  forwardSpeech,
+  realtimeSessionSchema,
+  speechBodySchema,
+} from "@/lib/gemini";
+import { isTargetError, resolveTarget, type Target } from "@/lib/deployments";
 import { readBearer, touchKey, verifyKey, type VerifiedKey } from "@/lib/keys";
 import { isRateLimited } from "@/lib/ratelimit";
 
@@ -20,19 +29,24 @@ export async function authenticate(req: Request, opts: { rateLimit?: boolean } =
   return key;
 }
 
-// Chat for an API key. `slug` comes from a deployment URL; otherwise the body's model names
-// a base model or one of the project's deployments.
-export async function handleChat(req: Request, slug?: string): Promise<Response> {
+async function handleModelCall<T extends { model?: string }>(
+  req: Request,
+  schema: z.ZodType<T>,
+  forward: (body: T, target: Target, caller: Caller) => Promise<Response>,
+  slug?: string,
+  allowEmptyBody = false,
+): Promise<Response> {
   const key = await authenticate(req);
   if (key instanceof Response) return key;
 
   let json: unknown;
   try {
-    json = await req.json();
+    const raw = await req.text();
+    json = !raw.trim() && allowEmptyBody ? {} : JSON.parse(raw);
   } catch {
     return apiError(400, "Request body must be valid JSON.", "invalid_request_error");
   }
-  const parsed = chatBodySchema.safeParse(json);
+  const parsed = schema.safeParse(json);
   if (!parsed.success) {
     const issue = parsed.error.issues[0];
     return apiError(400, `Invalid request: ${issue.path.join(".") || "body"} ${issue.message}`, "invalid_request_error");
@@ -50,10 +64,31 @@ export async function handleChat(req: Request, slug?: string): Promise<Response>
   }
 
   after(() => touchKey(key.id));
-  return forwardChat(parsed.data, target, {
+  return forward(parsed.data, target, {
     owner_id: key.owner_id,
     project_id: key.project_id,
     api_key_id: key.id,
     source: "api",
   });
+}
+
+// Chat for an API key. `slug` comes from a deployment URL; otherwise the body's model names
+// a base model or one of the project's deployments.
+export async function handleChat(req: Request, slug?: string): Promise<Response> {
+  return handleModelCall(req, chatBodySchema, forwardChat, slug);
+}
+
+// Text-to-speech (`sunlight-1-tts` or a deployment of it).
+export async function handleSpeech(req: Request, slug?: string): Promise<Response> {
+  return handleModelCall(req, speechBodySchema, forwardSpeech, slug);
+}
+
+// Closed-set structured decisions (`sunlight-decision` or a deployment of it).
+export async function handleDecision(req: Request, slug?: string): Promise<Response> {
+  return handleModelCall(req, decisionBodySchema, forwardDecision, slug);
+}
+
+// Ephemeral realtime WebSocket session (`sunlight-1.1-realtime` or a deployment of it).
+export async function handleRealtimeSession(req: Request, slug?: string): Promise<Response> {
+  return handleModelCall(req, realtimeSessionSchema, createRealtimeSession, slug, true);
 }

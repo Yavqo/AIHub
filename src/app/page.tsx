@@ -3,7 +3,15 @@ import { ButtonLink } from "@/components/Button/Button";
 import CodeBlock from "@/components/CodeBlock/CodeBlock";
 import StatusChip from "@/components/StatusChip/StatusChip";
 import { listModels } from "@/lib/catalog";
-import { DEFAULT_MODEL_ID, formatEur, isDeployableModel, modelStatusLabel, modelStatusTone } from "@/lib/models";
+import {
+  DEFAULT_MODEL_ID,
+  formatEur,
+  isDeployableModel,
+  modelKind,
+  modelKindLabel,
+  modelStatusLabel,
+  modelStatusTone,
+} from "@/lib/models";
 import { apiBaseUrl, appUrl, siteDescription, siteName } from "@/lib/site";
 import { chatSnippets } from "@/lib/snippets";
 import styles from "./page.module.css";
@@ -32,10 +40,13 @@ export default async function Home() {
           "@type": "Offer",
           name: m.display_name,
           priceCurrency: m.currency,
-          priceSpecification: [
-            { "@type": "UnitPriceSpecification", price: Number(m.input_price_per_mtok), priceCurrency: m.currency, unitText: "1M input tokens" },
-            { "@type": "UnitPriceSpecification", price: Number(m.output_price_per_mtok), priceCurrency: m.currency, unitText: "1M output tokens" },
-          ],
+          priceSpecification:
+            modelKind(m) === "realtime"
+              ? [{ "@type": "UnitPriceSpecification", price: Number(m.price_per_minute ?? 0.04), priceCurrency: m.currency, unitText: "1 minute" }]
+              : [
+                  { "@type": "UnitPriceSpecification", price: Number(m.input_price_per_mtok), priceCurrency: m.currency, unitText: "1M input tokens" },
+                  { "@type": "UnitPriceSpecification", price: Number(m.output_price_per_mtok), priceCurrency: m.currency, unitText: "1M output tokens" },
+                ],
         })),
       },
     ],
@@ -114,39 +125,66 @@ export default async function Home() {
                 <tr>
                   <th>Model</th>
                   <th>API ID</th>
+                  <th>Type</th>
                   <th>Status</th>
-                  <th>Input / 1M</th>
-                  <th>Output / 1M</th>
+                  <th>Input / Session</th>
+                  <th>Output</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {models.map((m) => (
-                  <tr key={m.id}>
-                    <td>
-                      <span className={styles.modelName}>{m.display_name}</span>
-                      <span className={styles.modelDesc}>{m.description}</span>
-                    </td>
-                    <td className={styles.modelId}>{m.id}</td>
-                    <td>
-                      <StatusChip tone={modelStatusTone(m)}>{modelStatusLabel(m)}</StatusChip>
-                    </td>
-                    <td className={styles.priceCell}>{formatEur(Number(m.input_price_per_mtok))}</td>
-                    <td className={styles.priceCell}>{formatEur(Number(m.output_price_per_mtok))}</td>
-                    <td>
-                      <div className={styles.rowActions}>
-                        {isDeployableModel(m) ? (
-                          <>
-                            <Link href="/dashboard/projects">Deploy</Link>
-                            <Link href={`/playground?model=${m.id}`}>Playground</Link>
-                          </>
-                        ) : (
-                          <Link href="/models">Details</Link>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {models.map((m) => {
+                  const kind = modelKind(m);
+                  const docsHref =
+                    kind === "tts"
+                      ? "/docs#tts"
+                      : kind === "decision"
+                        ? "/docs#decisions"
+                        : kind === "realtime"
+                          ? "/docs#realtime"
+                          : "/docs";
+                  return (
+                    <tr key={m.id}>
+                      <td>
+                        <span className={styles.modelName}>{m.display_name}</span>
+                        <span className={styles.modelDesc}>{m.description}</span>
+                      </td>
+                      <td className={styles.modelId}>{m.id}</td>
+                      <td>{modelKindLabel(m)}</td>
+                      <td>
+                        <StatusChip tone={modelStatusTone(m)}>{modelStatusLabel(m)}</StatusChip>
+                      </td>
+                      <td className={styles.priceCell}>
+                        {kind === "realtime"
+                          ? `${formatEur(Number(m.price_per_minute ?? 0.04))} / min`
+                          : `${formatEur(Number(m.input_price_per_mtok))} / 1M`}
+                      </td>
+                      <td className={styles.priceCell}>
+                        {kind === "realtime"
+                          ? "Included"
+                          : kind === "decision"
+                            ? "€0.00"
+                            : `${formatEur(Number(m.output_price_per_mtok))} / 1M`}
+                      </td>
+                      <td>
+                        <div className={styles.rowActions}>
+                          {isDeployableModel(m) ? (
+                            <>
+                              <Link href="/dashboard/projects">Deploy</Link>
+                              {kind === "chat" ? (
+                                <Link href={`/playground?model=${m.id}`}>Playground</Link>
+                              ) : (
+                                <Link href={docsHref}>Docs</Link>
+                              )}
+                            </>
+                          ) : (
+                            <Link href="/models">Details</Link>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Playground, { type PlaygroundTarget } from "./Playground";
 import { listModels } from "@/lib/catalog";
 import { loadDeployments, loadProjects, requireUser } from "@/lib/dashboard";
-import { DEFAULT_MODEL_ID, isDeployableModel } from "@/lib/models";
+import { DEFAULT_MODEL_ID, isDeployableModel, modelKind } from "@/lib/models";
 import { noIndex } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Playground", robots: noIndex };
@@ -13,8 +13,11 @@ export default async function PlaygroundPage({ searchParams }: PageProps<"/playg
   const [models, deployments, projects] = await Promise.all([listModels(), loadDeployments(), loadProjects()]);
   const projectName = new Map(projects.map((p) => [p.id, p.name]));
 
+  const chatModelIds = new Set(models.filter((m) => modelKind(m) === "chat").map((m) => m.id));
+
   const targets: PlaygroundTarget[] = [
     ...deployments
+      .filter((d) => chatModelIds.has(d.base_model_id))
       .map((d) => ({
         status: d.status,
         id: d.slug,
@@ -25,7 +28,7 @@ export default async function PlaygroundPage({ searchParams }: PageProps<"/playg
         isDeployment: true,
       })),
     ...models
-      .filter(isDeployableModel)
+      .filter((m) => isDeployableModel(m) && modelKind(m) === "chat")
       .map((m) => ({ id: m.id, label: m.display_name, group: "Base models", modelName: m.display_name, hasSystemPrompt: false, isDeployment: false, status: "active" as const })),
   ];
   const initial = targets.find((t) => t.id === model)?.id ?? targets.find((t) => t.status === "active")?.id ?? DEFAULT_MODEL_ID;
