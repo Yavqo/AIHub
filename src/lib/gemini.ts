@@ -358,6 +358,7 @@ export const realtimeSessionSchema = z.object({
   voice: z.string().trim().min(1).max(40).optional(),
   instructions: z.string().max(20_000).optional(),
   temperature: z.number().min(0).max(2).optional(),
+  thinking_effort: z.enum(["minimal", "low", "medium", "high"]).optional(),
   ttl_minutes: z.number().int().min(1).max(60).optional(),
   modalities: z.array(z.enum(["AUDIO", "TEXT"])).min(1).max(2).optional(),
 });
@@ -407,11 +408,15 @@ export async function createRealtimeSession(body: RealtimeSessionBody, target: T
 
   const voice = body.voice ?? deployment?.voice ?? DEFAULT_VOICE;
   const modalities = body.modalities ?? ["AUDIO"];
+  const thinkingEffort = body.thinking_effort ?? "high";
   const temperature = body.temperature ?? (deployment?.temperature != null ? Number(deployment.temperature) : undefined);
   const systemText = [deployment?.system_prompt, body.instructions].filter(Boolean).join("\n\n").trim();
 
   const liveConfig: Record<string, unknown> = {
     responseModalities: modalities,
+    thinkingConfig: {
+      thinkingLevel: thinkingEffort,
+    },
     speechConfig: {
       voiceConfig: {
         prebuiltVoiceConfig: { voiceName: voice },
@@ -486,6 +491,7 @@ export async function createRealtimeSession(body: RealtimeSessionBody, target: T
       websocket_url: LIVE_WS_URL,
       voice,
       modalities,
+      thinking_effort: thinkingEffort,
       ttl_minutes: ttlMinutes,
       expires_at: expireTime,
       new_session_expires_at: newSessionExpireTime,

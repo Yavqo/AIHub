@@ -194,6 +194,7 @@ for await (const chunk of stream) {
                 <tr><td>voice</td><td>Optional. Voice name (defaults to the deployment&apos;s voice or <code className={styles.inline}>Kore</code>).</td></tr>
                 <tr><td>instructions</td><td>Optional. Additional system instructions appended to the deployment&apos;s system prompt.</td></tr>
                 <tr><td>temperature</td><td>Optional. 0 to 2.</td></tr>
+                <tr><td>thinking_effort</td><td>Optional. <code className={styles.inline}>minimal</code>, <code className={styles.inline}>low</code>, <code className={styles.inline}>medium</code> or <code className={styles.inline}>high</code> (defaults to <code className={styles.inline}>high</code>).</td></tr>
                 <tr><td>ttl_minutes</td><td>Optional. Session lifetime in minutes (1 to 60, default 15). New connections must open within 2 minutes.</td></tr>
                 <tr><td>modalities</td><td>Optional. Array containing <code className={styles.inline}>AUDIO</code> and/or <code className={styles.inline}>TEXT</code>. Defaults to <code className={styles.inline}>[&quot;AUDIO&quot;]</code>.</td></tr>
               </tbody>
